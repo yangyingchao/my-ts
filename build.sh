@@ -27,6 +27,9 @@ SCRIPT=$(realpath "$0")
 TOPDIR=${SCRIPT%/*}
 C_ARGS=(-fPIC -c -I"${HOME}"/.local/include -I.)
 
+echo "CC: ${CC:=cc}"
+echo "CXX: ${CXX:=c++}"
+
 case $(uname) in
     "Darwin") soext="dylib" ;;
     *"MINGW"*) soext="dll" ;;
@@ -86,16 +89,16 @@ build-lang-in-dir() {
     set -x
     ### Build
     [[ -f parser.c ]] || die "parser.c is not found."
-    cc "${C_ARGS[@]}" parser.c || die "Compile fail"
+    ${CC} "${C_ARGS[@]}" parser.c || die "Compile fail"
 
     if [ -f scanner.c ]; then
-        cc "${C_ARGS[@]}" scanner.c || die "Compile fail"
-        cc -fPIC -shared ./*.o -o "${libname}" || die "Link fail"
+        ${CC} "${C_ARGS[@]}" scanner.c || die "Compile fail"
+        ${CC} -fPIC -shared ./*.o -o "${libname}" || die "Link fail"
     elif [ -f scanner.cc ]; then
-        c++ "${C_ARGS[@]}" -c scanner.cc || die "Compile fail"
-        c++ -fPIC -shared ./*.o -o "${libname}" || die "Link fail"
+        ${CXX} "${C_ARGS[@]}" -c scanner.cc || die "Compile fail"
+        ${CXX} -fPIC -shared ./*.o -o "${libname}" || die "Link fail"
     else
-        cc -fPIC -shared ./*.o -o "${libname}" || die "Link fail"
+        ${CC} -fPIC -shared ./*.o -o "${libname}" || die "Link fail"
     fi
 
     set +x
