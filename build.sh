@@ -117,6 +117,7 @@ build-language() {
 
     case "${lang}" in
         go-mod) build-lang-in-dir "${repo}" gomod ;;
+        php) build-lang-in-dir "${repo}/php" php ;;
         typescript)
             build-lang-in-dir "${repo}/typescript" typescript
             build-lang-in-dir "${repo}/tsx" tsx
