@@ -23,7 +23,7 @@ help() {
     exit 0
 }
 
-SCRIPT=$(realpath "$0")
+SCRIPT=$(realpath "$0"||grealpath "$0")
 TOPDIR=${SCRIPT%/*}
 C_ARGS=(-fPIC -c -I"${HOME}"/.local/include -I.)
 
