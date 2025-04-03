@@ -18,12 +18,31 @@
 ###   https://github.com/tree-sitter/tree-sitter/blob/master/docs/index.md
 ###
 
-help() {
-    sed -rn 's/^### ?//;T;p' "$0"
-    exit 0
-}
+if [[ -f ~/.local/share/shell/yc-common.sh ]]; then
+    source ~/.local/share/shell/yc-common.sh
+else
+    help() {
+        sed -rn 's/^### ?//;T;p' "$0"
+        exit 0
+    }
+    die() {
+        set +xe
+        echo "================================ DIE ===============================" >&2
+        echo >&2 "$*"
+        echo >&2 "Call stack:"
+        local n=$((${#BASH_LINENO[@]} - 1))
+        local i=0
+        while [ $i -lt $n ]; do
+            echo >&2 "    [$i] -- line ${BASH_LINENO[i]} -- ${FUNCNAME[i + 1]}"
+            i=$((i + 1))
+        done
+        echo >&2 "================================ END ==============================="
 
-SCRIPT=$(realpath "$0"||grealpath "$0")
+        [[ $- == *i* ]] && return 1 || exit 1
+    }
+fi
+
+SCRIPT=$(realpath "$0" || grealpath "$0")
 TOPDIR=${SCRIPT%/*}
 C_ARGS=(-fPIC -c -I"${HOME}"/.local/include -I.)
 
@@ -35,22 +54,6 @@ case $(uname) in
     *"MINGW"*) soext="dll" ;;
     *) soext="so" ;;
 esac
-
-die() {
-    set +xe
-    echo "================================ DIE ===============================" >&2
-    echo >&2 "$*"
-    echo >&2 "Call stack:"
-    local n=$((${#BASH_LINENO[@]} - 1))
-    local i=0
-    while [ $i -lt $n ]; do
-        echo >&2 "    [$i] -- line ${BASH_LINENO[i]} -- ${FUNCNAME[i + 1]}"
-        i=$((i + 1))
-    done
-    echo >&2 "================================ END ==============================="
-
-    [[ $- == *i* ]] && return 1 || exit 1
-}
 
 build-tree-sitter() {
     echo "======================== Building tree-sitter ========================"
@@ -167,8 +170,8 @@ while [ $# -gt 0 ] && [[ "$1" = -* ]]; do
             [[ "$2" =~ ^(git@|https://) ]] || die "Bad address: $2"
             url="$2" && shift
             base=${url##*/}
-            repodir=tree-sitter/"${base%.*}"
-            pushd "${TOPDIR}"/.. > /dev/null
+            repodir="${base%.*}"
+            pushd "${TOPDIR}" > /dev/null
             git submodule add "$url" "$repodir" || die "Submodule add"
             cd "$repodir" && update-to-lastest-tag
             popd > /dev/null
