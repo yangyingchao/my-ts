@@ -130,3 +130,6 @@
 [submodule "tree-sitter-kdl"]
 	path = tree-sitter-kdl
 	url = git@github.com:tree-sitter-grammars/tree-sitter-kdl.git
+[submodule "mps"]
+	path = mps
+	url = git@github.com:Ravenbrook/mps.git

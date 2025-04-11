@@ -8,11 +8,15 @@
 ### Options:
 ###   -h, --help    Show this message.
 ###   -a, --add     Add one (and only one) new language.
-###   -c, --core    Build treesitter library only.
 ###   -d, --debug   Show debug messages.
 ###   -u, --update  Update to the latest tag
 ###
-###  Without specifying any language, everything will be built.
+### Languages could be:
+###   1. core: treesitter itself.
+###   2. mps:  build mps which is required by igc.
+###   3. LANG: build for given language, such as c/cpp/java...
+###
+### Without specifying any language, everything will be built.
 ###
 ### More parsers can be found in:
 ###   https://github.com/tree-sitter/tree-sitter/blob/master/docs/index.md
@@ -62,6 +66,21 @@ build-tree-sitter() {
     PREFIX=${HOME}/.local make -j8
     PREFIX=${HOME}/.local make install
     [ -f "${HOME}"/.local/lib/libtree-sitter.a ] && rm "${HOME}"/.local/lib/libtree-sitter.a
+    popd > /dev/null 2>&1 || die "change dir"
+    echo ""
+}
+
+build-mps() {
+    echo "======================== Building MPS ========================"
+    pushd "${TOPDIR}"/mps || die "change dir"
+    git reset HEAD --hard
+    while IFS= read -r -d '' fn; do
+        sed -i 's/-Werror//g' "${fn}"
+    done < <(find . -name "*.gmk" -print0)
+
+    ./configure --prefix=${HOME}/.local
+    make -j8
+    make install
     popd > /dev/null 2>&1 || die "change dir"
     echo ""
 }
@@ -129,28 +148,6 @@ build-language() {
     esac
 }
 
-CORE_ONLY=
-
-build-all-langs() {
-    echo "Building all ..."
-    pushd "${TOPDIR}" || die "change dir"
-
-    for file in *; do
-        if [[ ! -d $file ]]; then
-            echo "Skipping file: $file"
-            continue
-        fi
-
-        if [[ "$file" = "tree-sitter" ]]; then
-            echo "Skipping directory: $file"
-            continue
-        fi
-
-        echo "Building ${file}"
-        build-language "${file//tree-sitter-/}"
-    done
-}
-
 update-to-lastest-tag() {
     echo "======================== Updating: $(basename "${PWD}") ========================"
     git fetch origin
@@ -163,7 +160,6 @@ while [ $# -gt 0 ] && [[ "$1" = -* ]]; do
     case "$1" in
         -h | --help) help 1 ;;
         -d | --debug) pdebug_setup ;;
-        -c | --core) CORE_ONLY=1 ;;
         -u | --update) git submodule foreach "${SCRIPT}" -U ;;
         -U) update-to-lastest-tag ;; # internal use only
         -a | --add)
@@ -193,16 +189,28 @@ done
 
 pushd "${TOPDIR}" || die "change dir"
 
-if [[ -n "${CORE_ONLY}" ]]; then
-    build-tree-sitter
-    exit $?
-fi
-
 if [ $# -ne 0 ]; then
-    for lang in "$@"; do
-        build-language "${lang}"
+    for item in "$@"; do
+        case "$item" in
+            core) build-tree-sitter ;;
+            mps) build-mps ;;
+            *) build-language "$item" ;;
+        esac
     done
 else
-    build-tree-sitter || die "Failed to build tree-sitter library."
-    build-all-langs || die "Failed to build parser."
+    echo "Building all ..."
+    pushd "${TOPDIR}" || die "change dir"
+
+    for item in *; do
+        if [[ ! -d $item ]]; then
+            echo "Skipping file: $item"
+            continue
+        fi
+
+        case "$item" in
+            tree-sitter) build-tree-sitter ;;
+            mps) build-mps ;;
+             *) build-language "${item//tree-sitter-/}" ;;
+        esac
+    done
 fi
