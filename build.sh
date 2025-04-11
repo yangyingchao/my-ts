@@ -46,6 +46,8 @@ else
     }
 fi
 
+export LANG=C
+
 SCRIPT=$(realpath "$0" || grealpath "$0")
 TOPDIR=${SCRIPT%/*}
 C_ARGS=(-fPIC -c -I"${HOME}"/.local/include -I.)
@@ -78,9 +80,10 @@ build-mps() {
         sed -i 's/-Werror//g' "${fn}"
     done < <(find . -name "*.gmk" -print0)
 
-    ./configure --prefix=${HOME}/.local
+    ./configure --prefix="${HOME}"/.local
     make -j8
     make install
+    rm -rf "${HOME}"/.local/lib/libmps-debug.a
     popd > /dev/null 2>&1 || die "change dir"
     echo ""
 }
@@ -148,8 +151,9 @@ build-language() {
     esac
 }
 
-update-to-lastest-tag() {
+update-to-latest-tag() {
     echo "======================== Updating: $(basename "${PWD}") ========================"
+    git reset HEAD --hard
     git fetch origin
     local tag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
     git checkout "${tag}"
@@ -161,7 +165,7 @@ while [ $# -gt 0 ] && [[ "$1" = -* ]]; do
         -h | --help) help 1 ;;
         -d | --debug) pdebug_setup ;;
         -u | --update) git submodule foreach "${SCRIPT}" -U ;;
-        -U) update-to-lastest-tag ;; # internal use only
+        -U) update-to-latest-tag ;; # internal use only
         -a | --add)
             [[ "$2" =~ ^(git@|https://) ]] || die "Bad address: $2"
             url="$2" && shift
@@ -169,7 +173,7 @@ while [ $# -gt 0 ] && [[ "$1" = -* ]]; do
             repodir="${base%.*}"
             pushd "${TOPDIR}" > /dev/null
             git submodule add "$url" "$repodir" || die "Submodule add"
-            cd "$repodir" && update-to-lastest-tag
+            cd "$repodir" && update-to-latest-tag
             popd > /dev/null
             build-language "$(echo "$repodir" | sed -E 's#tree-sitter/tree-sitter-(.*?).git#\1#g')"
             ;;
