@@ -6,9 +6,7 @@
 ###   build.sh [options] [languages]
 ###
 ### Options:
-###   -h, --help    Show this message.
 ###   -a, --add     Add one (and only one) new language.
-###   -d, --debug   Show debug messages.
 ###   -u, --update  Update to the latest tag
 ###
 ### Languages could be:
@@ -22,29 +20,7 @@
 ###   https://github.com/tree-sitter/tree-sitter/blob/master/docs/index.md
 ###
 
-if [[ -f ~/.local/share/shell/yc-common.sh ]]; then
-    source ~/.local/share/shell/yc-common.sh
-else
-    help() {
-        sed -rn 's/^### ?//;T;p' "$0"
-        exit 0
-    }
-    die() {
-        set +xe
-        echo "================================ DIE ===============================" >&2
-        echo >&2 "$*"
-        echo >&2 "Call stack:"
-        local n=$((${#BASH_LINENO[@]} - 1))
-        local i=0
-        while [ $i -lt $n ]; do
-            echo >&2 "    [$i] -- line ${BASH_LINENO[i]} -- ${FUNCNAME[i + 1]}"
-            i=$((i + 1))
-        done
-        echo >&2 "================================ END ==============================="
-
-        [[ $- == *i* ]] && return 1 || exit 1
-    }
-fi
+source ~/.local/share/shell/yc-common.sh
 
 export LANG=C
 
@@ -84,6 +60,7 @@ build-mps() {
     make -j8
     make install
     rm -rf "${HOME}"/.local/lib/libmps-debug.a
+    git reset HEAD --hard
     popd > /dev/null 2>&1 || die "change dir"
     echo ""
 }
@@ -214,7 +191,7 @@ else
         case "$item" in
             tree-sitter) build-tree-sitter ;;
             mps) build-mps ;;
-             *) build-language "${item//tree-sitter-/}" ;;
+            *) build-language "${item//tree-sitter-/}" ;;
         esac
     done
 fi
