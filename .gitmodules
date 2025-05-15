@@ -133,3 +133,6 @@
 [submodule "tree-sitter-kdl"]
 	path = tree-sitter-kdl
 	url = git@github.com:tree-sitter-grammars/tree-sitter-kdl.git
+[submodule "tree-sitter-hyprlang"]
+	path = tree-sitter-hyprlang
+	url = git@github.com:tree-sitter-grammars/tree-sitter-hyprlang.git
