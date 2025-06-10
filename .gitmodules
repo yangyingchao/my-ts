@@ -136,3 +136,6 @@
 [submodule "tree-sitter-hyprlang"]
 	path = tree-sitter-hyprlang
 	url = git@github.com:tree-sitter-grammars/tree-sitter-hyprlang.git
+[submodule "tree-sitter-perl"]
+	path = tree-sitter-perl
+	url = git@github.com:tree-sitter-perl/tree-sitter-perl.git
