@@ -94,9 +94,6 @@
 [submodule "tree-sitter-java"]
 	path = tree-sitter-java
 	url = https://github.com/tree-sitter/tree-sitter-java.git
-[submodule "tree-sitter-yaml"]
-	path = tree-sitter-yaml
-	url = https://github.com/ikatyang/tree-sitter-yaml.git
 [submodule "tree-sitter-meson"]
 	path = tree-sitter-meson
 	url = https://github.com/Decodetalkers/tree-sitter-meson.git
@@ -127,9 +124,9 @@
 [submodule "tree-sitter-jsdoc"]
 	path = tree-sitter-jsdoc
 	url = git@github.com:tree-sitter/tree-sitter-jsdoc.git
-[submodule "tree-sitter-kdl"]
-	path = tree-sitter-kdl
-	url = git@github.com:tree-sitter-grammars/tree-sitter-kdl.git
 [submodule "tree-sitter-hyprlang"]
 	path = tree-sitter-hyprlang
 	url = git@github.com:tree-sitter-grammars/tree-sitter-hyprlang.git
+[submodule "tree-sitter-yaml"]
+	path = tree-sitter-yaml
+	url = https://github.com/tree-sitter-grammars/tree-sitter-yaml
