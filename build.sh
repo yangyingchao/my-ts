@@ -11,8 +11,7 @@
 ###
 ### Languages could be:
 ###   1. core: treesitter itself.
-###   2. mps:  build mps which is required by igc.
-###   3. LANG: build for given language, such as c/cpp/java...
+###   2. LANG: build for given language, such as c/cpp/java...
 ###
 ### Without specifying any language, everything will be built.
 ###
@@ -27,9 +26,6 @@ export LANG=C
 SCRIPT=$(realpath "$0" || grealpath "$0")
 TOPDIR=${SCRIPT%/*}
 C_ARGS=(-fPIC -c -I"${HOME}"/.local/include -I.)
-
-echo "CC: ${CC:=cc}"
-echo "CXX: ${CXX:=c++}"
 
 case $(uname) in
     "Darwin") soext="dylib" ;;
@@ -48,30 +44,12 @@ build-tree-sitter() {
     echo ""
 }
 
-build-mps() {
-    echo "======================== Building MPS ========================"
-    pushd "${TOPDIR}"/mps || die "change dir"
-    git reset HEAD --hard
-    while IFS= read -r -d '' fn; do
-        sed -i 's/-Werror//g' "${fn}"
-    done < <(find . -name "*.gmk" -print0)
-
-    ./configure --prefix="${HOME}"/.local
-    make -j8
-    make install
-    rm -rf "${HOME}"/.local/lib/libmps-debug.a
-    git reset HEAD --hard
-    popd > /dev/null 2>&1 || die "change dir"
-    echo ""
-}
-
 build-lang-in-dir() {
     [ $# -ne 2 ] && die "Usage: build-lang-in-dir dir lang."
 
     pushd "$1" || die "change dir"
 
     local lang=$2
-
     echo "======================== Building language $lang ========================"
 
     local sourcedir="${PWD}/src"
@@ -133,8 +111,13 @@ update-to-latest-tag() {
     git reset HEAD --hard
     git fetch origin
     local tag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
-    git checkout "${tag}"
-    exit $?
+    if [[ -n "${tag}" ]]; then
+        git checkout "${tag}"
+        exit $?
+    else
+        git reset origin/HEAD
+        exit $?
+    fi
 }
 
 while [ $# -gt 0 ] && [[ "$1" = -* ]]; do
@@ -174,7 +157,6 @@ if [ $# -ne 0 ]; then
     for item in "$@"; do
         case "$item" in
             core) build-tree-sitter ;;
-            mps) build-mps ;;
             *) build-language "$item" ;;
         esac
     done
@@ -190,7 +172,6 @@ else
 
         case "$item" in
             tree-sitter) build-tree-sitter ;;
-            mps) build-mps ;;
             *) build-language "${item//tree-sitter-/}" ;;
         esac
     done
