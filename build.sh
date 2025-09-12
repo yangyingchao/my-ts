@@ -102,6 +102,10 @@ build-language() {
             build-lang-in-dir "${repo}/typescript" typescript
             build-lang-in-dir "${repo}/tsx" tsx
             ;;
+        markdown)
+            build-lang-in-dir "${repo}/tree-sitter-markdown" markdown
+            build-lang-in-dir "${repo}/tree-sitter-markdown-inline" markdown-inline
+            ;;
         *) build-lang-in-dir "$repo" "$lang" ;;
     esac
 }
