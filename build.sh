@@ -7,7 +7,8 @@
 ###
 ### Options:
 ###   -a, --add     Add one (and only one) new language.
-###   -u, --update  Update to the latest tag
+###   -u, --update  Update to the latest tag.
+###   -f, --force   Force add or update.
 ###
 ### Languages could be:
 ###   1. core: treesitter itself.
@@ -26,6 +27,8 @@ export LANG=C
 SCRIPT=$(realpath "$0" || grealpath "$0")
 TOPDIR=${SCRIPT%/*}
 C_ARGS=(-fPIC -c -I"${HOME}"/.local/include -I.)
+FORCE=
+ADD=
 
 case $(uname) in
     "Darwin") soext="dylib" ;;
@@ -126,22 +129,10 @@ update-to-latest-tag() {
 
 while [ $# -gt 0 ] && [[ "$1" = -* ]]; do
     case "$1" in
-        -h | --help) help 1 ;;
-        -d | --debug) pdebug_setup ;;
+        -f | --force) FORCE=1 ;;
         -u | --update) git submodule foreach "${SCRIPT}" -U ;;
         -U) update-to-latest-tag ;; # internal use only
-        -a | --add)
-            [[ "$2" =~ ^(git@|https://) ]] || die "Bad address: $2"
-            url="$2" && shift
-            base=${url##*/}
-            repodir="${base%.*}"
-            pushd "${TOPDIR}" > /dev/null
-            git submodule add "$url" "$repodir" || die "Submodule add"
-            cd "$repodir" && update-to-latest-tag
-            popd > /dev/null
-            build-language "$(echo "$repodir" | sed -E 's#tree-sitter/tree-sitter-(.*?).git#\1#g')"
-            ;;
-
+        -a | --add) ADD="$2" ; shift ;;
         *)
             if [[ $1 = -* ]]; then
                 echo "Unrecognized opt: $1, pass '--help' to show help message."
@@ -157,26 +148,40 @@ done
 
 pushd "${TOPDIR}" || die "change dir"
 
-if [ $# -ne 0 ]; then
-    for item in "$@"; do
-        case "$item" in
-            core) build-tree-sitter ;;
-            *) build-language "$item" ;;
-        esac
-    done
+if [[ -n "${ADD}" ]]; then
+    [[ "$ADD" =~ ^(git@|https://) ]] || die "Bad address: $2"
+    base=${ADD##*/}
+    repodir="${base%.*}"
+    pushd "${TOPDIR}" > /dev/null
+    commands=(git submodule add)
+    [[ -n "${FORCE}" ]] && commands+=("--force")
+    commands+=("$ADD" "$repodir")
+    "${commands[@]}" || die "Submodule add"
+    cd "$repodir" && update-to-latest-tag
+    popd > /dev/null
+    build-language "$(echo "$repodir" | sed -E 's#tree-sitter/tree-sitter-(.*?).git#\1#g')"
 else
-    echo "Building all ..."
-    pushd "${TOPDIR}" || die "change dir"
+    if [ $# -ne 0 ]; then
+        for item in "$@"; do
+            case "$item" in
+                core) build-tree-sitter ;;
+                *) build-language "$item" ;;
+            esac
+        done
+    else
+        echo "Building all ..."
+        pushd "${TOPDIR}" || die "change dir"
 
-    for item in *; do
-        if [[ ! -d $item ]]; then
-            echo "Skipping file: $item"
-            continue
-        fi
+        for item in *; do
+            if [[ ! -d $item ]]; then
+                echo "Skipping file: $item"
+                continue
+            fi
 
-        case "$item" in
-            tree-sitter) build-tree-sitter ;;
-            *) build-language "${item//tree-sitter-/}" ;;
-        esac
-    done
+            case "$item" in
+                tree-sitter) build-tree-sitter ;;
+                *) build-language "${item//tree-sitter-/}" ;;
+            esac
+        done
+    fi
 fi
