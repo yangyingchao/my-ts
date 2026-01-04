@@ -30,6 +30,11 @@ C_ARGS=(-fPIC -c -I"${HOME}"/.local/include -I.)
 FORCE=
 ADD=
 
+[[ -f yc_build_env.sh ]] && source yc_build_env.sh
+
+CC=${CC:-gcc}
+CXX=${CXX:-g++}
+
 case $(uname) in
     "Darwin") soext="dylib" ;;
     *"MINGW"*) soext="dll" ;;
