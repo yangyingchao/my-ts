@@ -72,7 +72,7 @@ build-lang-in-dir() {
     pushd "${sourcedir}" || die "Failed to change directory to ${sourcedir}"
 
     # clean up old files.
-    rm ./*.o ./*."${soext}"*
+    rm -rf ./*.o ./*."${soext}"*
 
     set -x
     ### Build
