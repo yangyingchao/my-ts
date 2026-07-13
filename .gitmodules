@@ -139,3 +139,6 @@
 [submodule "tree-sitter-zig"]
 	path = tree-sitter-zig
 	url = git@github.com:tree-sitter-grammars/tree-sitter-zig.git
+[submodule "tree-sitter-json5"]
+	path = tree-sitter-json5
+	url = https://github.com/Joakker/tree-sitter-json5
